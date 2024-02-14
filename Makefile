@@ -2,6 +2,7 @@ make:
 	make build
 
 build:
+	mkdir -p bin
 	gcc -o ./bin/text main.c -lncurses
 	make run
 
