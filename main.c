@@ -5,8 +5,9 @@
 #include <math.h>
 #include <time.h>
 #include <stdio.h>
+#include "line.c"
 
-#define EDITOR_NAME "WOMP WOMP"
+#define EDITOR_NAME "womp womp"
 
 #define STARTUP_ANIMATION_TIME (300000 / strlen(EDITOR_NAME))
 
@@ -113,6 +114,14 @@ void startupRender(ScreenProperties main_screen) {
   clear();
 }
 
+void updateDebugWindow(WINDOW* window, int cursor_x, int cursor_y) {
+  wmove(window, 0,0);
+  char buf[30];
+  sprintf(buf, "Cursor X: %d\nCursor Y: %d\n", cursor_x, cursor_y);
+  waddstr(window, buf); 
+  wrefresh(window);
+}
+
 void renderBigLetter(uint letter_index, ScreenProperties main_screen, int v_center, int spacing)
 {
   WINDOW* temp_letter_window = create_window((int) main_screen.rows / 2, spacing, v_center, spacing*letter_index+1);
@@ -139,20 +148,15 @@ void startupRenderBig(ScreenProperties main_screen) {
   clear();
 }
 
-
-void startRender() {
-  ScreenProperties main_screen_prop = getScreenProperties(stdscr, 0, 0);
-  startupRenderBig(main_screen_prop);
-  refresh();
-  WINDOW* editor_window = create_window(main_screen_prop.rows, main_screen_prop.cols, 0, 0);
-  keypad(editor_window, TRUE);
-  ScreenProperties editor_window_prop = getScreenProperties(editor_window, 1, 1);
-  wborder(editor_window, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-  wrefresh(editor_window);
+  void startEventLoop(WINDOW* editor_window) {
   int chr = wgetch(editor_window);
   int cursor_x = 0;
   int cursor_y = 0;
   curs_set(1);
+  Line line = makeLine();
+
+  WINDOW* debug_window = create_window(20, 20, 15, 15);
+
   while (chr != (int) 'q') {
     switch(chr)
     {
@@ -163,38 +167,72 @@ void startRender() {
         break;
 
       case KEY_LEFT:
+        if (cursor_x - 1 < 0) {
+          break;
+        }
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y, cursor_x-1);
         cursor_x--;
         break;
 
-
       case KEY_UP:
+        if (cursor_y - 1 < 0) {
+          break;
+        }
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y-1, cursor_x);
-        cursor_y++;
+        cursor_y--;
         break;
 
       case KEY_DOWN:
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y+1, cursor_x);
-        cursor_y--;
+        cursor_y++;
         break;
 
       case KEY_BACKSPACE:
+        if (cursor_y - 1 < 0) {
+          break;
+        };
         wmove(editor_window, cursor_y, cursor_x-1);
         wdelch(editor_window);
-        cursor_x--;
+        tryRemove(&line);
+        cursor_y--;
         break;
+
+      case KEY_ENTER:
+        cursor_y--;
+
 
       default:
         waddch(editor_window, chr);
+        append(&line, chr);
         cursor_x++;
-    } 
+    }
+
+    if (1) {
+      updateDebugWindow(debug_window, cursor_x, cursor_y);
+    }
+    
     wrefresh(editor_window);
     chr = wgetch(editor_window);
+
   };
   endwin();
+  printf("%s\n", line.content);
+
+}
+
+void startRender() {
+  ScreenProperties main_screen_prop = getScreenProperties(stdscr, 0, 0);
+  startupRenderBig(main_screen_prop);
+  refresh();
+  WINDOW* editor_window = create_window(main_screen_prop.rows, main_screen_prop.cols, 0, 0);
+  keypad(editor_window, TRUE);
+  ScreenProperties editor_window_prop = getScreenProperties(editor_window, 1, 1);
+  wborder(editor_window, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+  wrefresh(editor_window);
+  startEventLoop(editor_window);
 } 
 
 

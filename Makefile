@@ -12,3 +12,7 @@ run:
 vector:
 	gcc -o ./bin/vector char_vector.c
 	./bin/vector
+
+line:
+	gcc -o ./bin/line line.c
+	./bin/line
