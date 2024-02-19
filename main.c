@@ -114,10 +114,10 @@ void startupRender(ScreenProperties main_screen) {
   clear();
 }
 
-void updateDebugWindow(WINDOW* window, int cursor_x, int cursor_y) {
+void updateDebugWindow(WINDOW* window, int cursor_x, int cursor_y, Line line) {
   wmove(window, 0,0);
-  char buf[30];
-  sprintf(buf, "Cursor X: %d\nCursor Y: %d\n", cursor_x, cursor_y);
+  char buf[100];
+  sprintf(buf, "Cursor X: %d\nCursor Y: %d\nLine Length: %d\nLine Capacity: %d\n", cursor_x, cursor_y, line.length, line.capacity);
   waddstr(window, buf); 
   wrefresh(window);
 }
@@ -163,7 +163,7 @@ void startupRenderBig(ScreenProperties main_screen) {
       case KEY_RIGHT:
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y, cursor_x+1);
-        cursor_x++;
+        getyx(editor_window, cursor_y, cursor_x);
         break;
 
       case KEY_LEFT:
@@ -172,7 +172,7 @@ void startupRenderBig(ScreenProperties main_screen) {
         }
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y, cursor_x-1);
-        cursor_x--;
+        getyx(editor_window, cursor_y, cursor_x);
         break;
 
       case KEY_UP:
@@ -181,37 +181,35 @@ void startupRenderBig(ScreenProperties main_screen) {
         }
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y-1, cursor_x);
-        cursor_y--;
+        getyx(editor_window, cursor_y, cursor_x);
+
         break;
 
       case KEY_DOWN:
         getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y+1, cursor_x);
-        cursor_y++;
+        getyx(editor_window, cursor_y, cursor_x);
         break;
 
       case KEY_BACKSPACE:
-        if (cursor_y - 1 < 0) {
+        if (cursor_x - 1 < 0) {
           break;
         };
         wmove(editor_window, cursor_y, cursor_x-1);
         wdelch(editor_window);
         tryRemove(&line);
-        cursor_y--;
+        getyx(editor_window, cursor_y, cursor_x);
         break;
 
-      case KEY_ENTER:
-        cursor_y--;
-
-
       default:
+
         waddch(editor_window, chr);
+        getyx(editor_window, cursor_y, cursor_x);
         append(&line, chr);
-        cursor_x++;
     }
 
     if (1) {
-      updateDebugWindow(debug_window, cursor_x, cursor_y);
+      updateDebugWindow(debug_window, cursor_x, cursor_y, line);
     }
     
     wrefresh(editor_window);
@@ -243,5 +241,4 @@ int main(int arc, char* argv[]) {
   initCurses();
   startRender();
   int max_value;
-  
 }

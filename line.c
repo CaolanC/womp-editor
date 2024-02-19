@@ -12,7 +12,7 @@ Line makeLine() {
   Line line;
   line.length = 0;
   line.content = malloc(sizeof(char));
-  line.capacity = 2;
+  line.capacity = 3;
   *(line.content)  = '\0';
   return line;
 };
@@ -20,8 +20,8 @@ Line makeLine() {
 void reduceLine(Line* line, int reduction_size) {
   if (line -> length - reduction_size >= 1) {
     line -> content = realloc(line -> content, (line -> length - reduction_size) * sizeof(char));
+    line -> length -= reduction_size;
   }
-  line -> length -= reduction_size;
 }
 
 void extendLine(Line* line, int extension_size) {
@@ -39,9 +39,15 @@ void append(Line *line, char input) {
 }
 
 int tryRemove(Line *line) {
-  if (*(line -> content) == '\0') {
+  if (*(line -> content) == '\0' || line -> length - 1 < 0) {
     return 0;
   };
+
+  if (line -> length == (int) (line -> capacity + 2) / 2 && line -> length > 2) {
+    line -> content = realloc(line -> content, (line -> length - 1) * sizeof(char));
+    line -> capacity = line -> length;
+  }
+
   *(line -> content + line -> length - 1) = '\0';
   line -> length--;
 
