@@ -6,8 +6,9 @@
 #include <time.h>
 #include <stdio.h>
 #include "line.c"
+#include "linevec.c"
 
-#define EDITOR_NAME "womp womp"
+#define EDITOR_NAME "WOMP WOMP"
 
 #define STARTUP_ANIMATION_TIME (300000 / strlen(EDITOR_NAME))
 
@@ -114,27 +115,28 @@ void startupRender(ScreenProperties main_screen) {
   clear();
 }
 
-void updateDebugWindow(WINDOW* window, int cursor_x, int cursor_y, Line line) {
+void updateDebugWindow(WINDOW* window, int cursor_x, int cursor_y, Line line, LineVec l_vec) {
   wmove(window, 0,0);
-  char buf[100];
-  sprintf(buf, "Cursor X: %d\nCursor Y: %d\nLine Length: %d\nLine Capacity: %d\n", cursor_x, cursor_y, line.length, line.capacity);
+  char buf[150];
+  sprintf(buf, "Cursor X: %d\nCursor Y: %d\nLine Length: %d\nLine Capacity: %d\nLVec Length: %d\n", cursor_x, cursor_y, line.length, line.capacity, l_vec.length);
   waddstr(window, buf); 
   wrefresh(window);
 }
 
-void renderBigLetter(uint letter_index, ScreenProperties main_screen, int v_center, int spacing)
+WINDOW* renderBigLetter(uint letter_index, ScreenProperties main_screen, int v_center, int spacing)
 {
   WINDOW* temp_letter_window = create_window((int) main_screen.rows / 2, spacing, v_center, spacing*letter_index+1);
   wborder(temp_letter_window, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
   print_figlet(EDITOR_NAME[letter_index], temp_letter_window);
   wrefresh(temp_letter_window);
+  return temp_letter_window;
 }
 
 void startupRenderBig(ScreenProperties main_screen) {
 
   int v_center = (int) main_screen.rows / 2.5;
   int spacing = (int) main_screen.cols / strlen(EDITOR_NAME);
-
+  WINDOW* windows[strlen(EDITOR_NAME)];
 
   usleep(STARTUP_ANIMATION_TIME);
   move((int) main_screen.rows/2, ((int) main_screen.cols/2) - (int) strlen(EDITOR_NAME)/2);
@@ -144,16 +146,25 @@ void startupRenderBig(ScreenProperties main_screen) {
   }
   curs_set(0);
   usleep(200000);
+  for(int i = 0; i < strlen(EDITOR_NAME); i++) {
+    free(windows[i]);
+  }
   //sleep(10);
   clear();
 }
 
-  void startEventLoop(WINDOW* editor_window) {
+void addNextLine(LineVec* vec, Line* line, int cursor_x) {
+  appendLineVec(vec, line);
+}
+
+void startEventLoop(WINDOW* editor_window) {
   int chr = wgetch(editor_window);
   int cursor_x = 0;
   int cursor_y = 0;
   curs_set(1);
   Line line = makeLine();
+  LineVec l_vec = makeLineVec();
+  appendLineVec(&l_vec, &line);
 
   WINDOW* debug_window = create_window(20, 20, 15, 15);
 
@@ -203,22 +214,28 @@ void startupRenderBig(ScreenProperties main_screen) {
 
       default:
 
+        if ((int) chr == 10) {
+          addNextLine(&l_vec, &line, cursor_x);
+        }
+
         waddch(editor_window, chr);
         getyx(editor_window, cursor_y, cursor_x);
         append(&line, chr);
     }
 
     if (1) {
-      updateDebugWindow(debug_window, cursor_x, cursor_y, line);
+      updateDebugWindow(debug_window, cursor_x, cursor_y, line, l_vec);
     }
     
     wrefresh(editor_window);
     chr = wgetch(editor_window);
 
   };
+  free(debug_window);
+  free(editor_window);
   endwin();
-  printf("%s\n", line.content);
-
+  //printf("%s\n", line.content);
+  printLineVec(l_vec);
 }
 
 void startRender() {

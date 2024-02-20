@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <threads.h>
 
+#define LINE__H
+
 typedef struct Line {
   int length;
   int capacity;
@@ -53,3 +55,4 @@ int tryRemove(Line *line) {
 
   return 1;
 }
+
