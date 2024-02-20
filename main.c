@@ -169,10 +169,10 @@ void startEventLoop(WINDOW* editor_window) {
   WINDOW* debug_window = create_window(20, 20, 15, 15);
 
   while (chr != (int) 'q') {
+    getyx(editor_window, cursor_y, cursor_x);
     switch(chr)
     {
       case KEY_RIGHT:
-        getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y, cursor_x+1);
         getyx(editor_window, cursor_y, cursor_x);
         break;
@@ -181,7 +181,6 @@ void startEventLoop(WINDOW* editor_window) {
         if (cursor_x - 1 < 0) {
           break;
         }
-        getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y, cursor_x-1);
         getyx(editor_window, cursor_y, cursor_x);
         break;
@@ -190,14 +189,12 @@ void startEventLoop(WINDOW* editor_window) {
         if (cursor_y - 1 < 0) {
           break;
         }
-        getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y-1, cursor_x);
         getyx(editor_window, cursor_y, cursor_x);
 
         break;
 
       case KEY_DOWN:
-        getyx(editor_window, cursor_y, cursor_x);
         wmove(editor_window, cursor_y+1, cursor_x);
         getyx(editor_window, cursor_y, cursor_x);
         break;
@@ -231,8 +228,6 @@ void startEventLoop(WINDOW* editor_window) {
     chr = wgetch(editor_window);
 
   };
-  free(debug_window);
-  free(editor_window);
   endwin();
   //printf("%s\n", line.content);
   printLineVec(l_vec);
